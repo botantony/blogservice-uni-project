@@ -1,0 +1,34 @@
+arch: "aarch64" # Or use another arch
+
+images:
+  - location: "https://cloud-images.ubuntu.com/releases/questing/release-20251212/ubuntu-25.10-server-cloudimg-amd64.img"
+    arch: "x86_64"
+    digest: "sha256:3d0977875af04e32a0eb176d73e7164df18cd774a8e0a51605584627490837a1"
+  - location: "https://cloud-images.ubuntu.com/releases/questing/release-20251212/ubuntu-25.10-server-cloudimg-arm64.img"
+    arch: "aarch64"
+    digest: "sha256:ec93c8acae3e7630daf723e31716703639417d86b87eb6962f3a0003d1045c15"
+
+cpus: 2
+memory: "4GiB"
+disk: "20GiB"
+
+user:
+  name: "bloguser"
+
+mounts:
+  - location: "~/Studying/OS/project" # Adjust project directory
+    mountPoint: "/home/{{.User}}/service"
+    writable: true
+  - location: "/tmp/lima"
+    writable: true
+
+portForwards:
+  - guestPort: 5555
+    hostPort: 5555
+  - guestPort: 6543 # Prefer to use 5432 for PostgreSQL if possible
+    hostPort: 6543
+
+# Uncomment to use QEMU (f.e. if arch is not `aarch64`)
+# vmType: "qemu"
+# rosetta:
+#   enabled: false
