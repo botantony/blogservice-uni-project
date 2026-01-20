@@ -2,7 +2,9 @@
 
 module Session where
 
-import           Control.Monad.IO.Class    (liftIO)
+import           Control.Monad             (join)
+import           Control.Monad.Trans.Class (lift)
+import           Control.Monad.Trans.Maybe
 import qualified Data.ByteString           as BS
 import qualified Data.ByteString.Base64    as B64
 import qualified Data.Text                 as T
@@ -20,6 +22,11 @@ data SessionData = SessionData
   , sessionUsername :: T.Text
   , sessionIsAdmin  :: Bool
   } deriving (Show)
+
+-- Helper function
+rightToMaybe :: Either a b -> Maybe b
+rightToMaybe (Right x) = Just x
+rightToMaybe _         = Nothing
 
 sessionCookieName :: BS.ByteString
 sessionCookieName = "blog_session"
@@ -59,21 +66,20 @@ setSessionCookie key sessionData = do
 
 getSession :: CS.Key -> ActionM (Maybe SessionData)
 getSession key = do
-  cookieHeader <- header "Cookie"
-  case cookieHeader of
-    Nothing -> return Nothing
-    Just cookieText -> do
-      let cookies = parseCookies $ TE.encodeUtf8 $ TL.toStrict cookieText
-          sessionCookie = lookup sessionCookieName cookies
-      case sessionCookie of
-        Nothing -> return Nothing
-        Just encryptedB64 -> case B64.decode encryptedB64 of
-          Left _ -> return Nothing
-          Right encrypted -> do
-            let decrypted = CS.decrypt key encrypted
-            case decrypted >>= (decodeSession . TE.decodeUtf8) of
-              Just sessionData -> return $ Just sessionData
-              Nothing          -> return Nothing
+  result <- runMaybeT $ do
+    cookieHeader <- lift $ header "Cookie"
+    cookieText <- hoistMaybe cookieHeader
+
+    let cookies = parseCookies $ TE.encodeUtf8 $ TL.toStrict cookieText
+
+    sessionCookie <- hoistMaybe $ lookup sessionCookieName cookies
+    encrypted <- hoistMaybe . rightToMaybe $ B64.decode sessionCookie
+
+    let decrypted = CS.decrypt key encrypted
+
+    return $ decrypted >>= (decodeSession . TE.decodeUtf8)
+
+  return $ join result
 
 clearSessionCookie :: ActionM ()
 clearSessionCookie = do

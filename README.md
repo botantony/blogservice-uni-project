@@ -46,8 +46,8 @@ sudo -u bloguser bash
 stack install --local-bin-path bin
 
 # 5. Start the service:
-sudo systemd start blog-service
-sudo systemd enable blog-service
+sudo systemctl start blogservice
+sudo systemctl enable blogservice
 
 # Now you should be able to open a https://localhost:5555 and use the website
 ```
