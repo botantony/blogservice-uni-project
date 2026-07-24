@@ -16,7 +16,7 @@ user:
   name: "bloguser"
 
 mounts:
-  - location: "~/Studying/OS/project" # Adjust project directory
+  - location: "~/Studying/OS/blogservice-uni-project" # Adjust project directory
     mountPoint: "/home/{{.User}}/service"
     writable: true
   - location: "/tmp/lima"
