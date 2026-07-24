@@ -1,7 +1,0 @@
-.stack-work/*
-.env
-dist-newstyle/*
-config/*
-bin/*
-!config/.keepme
-session.key
